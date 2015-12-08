@@ -4,7 +4,7 @@ from setuptools import setup, Extension, find_packages
 
 setup(
     name="sensorfusion",
-    version="0.0.1",
+    version="0.0.4",
     description="python sensor fusion, copied from Android",
     author="Amir Sadoughi",
     author_email="sensorfusion@princehonest.com",
