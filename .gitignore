@@ -1,0 +1,6 @@
+.venv
+build
+*.pyc
+*.egg-info
+*~
+*.so
