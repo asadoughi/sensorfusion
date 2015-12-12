@@ -24,8 +24,8 @@ class TestOrientation(unittest.TestCase):
         return self._compute_attitude(mag, acc)
 
     # pitch
-    def _compute_attitude_y(self, mag):
-        acc = [0, sensorfusion.GRAVITY_EARTH, 0]
+    def _compute_attitude_x(self, mag):
+        acc = [sensorfusion.GRAVITY_EARTH, 0, 0]
         return self._compute_attitude(mag, acc)
 
     def _compute_attitude(self, mag, acc):
@@ -87,6 +87,53 @@ class TestOrientation(unittest.TestCase):
             self.assertAlmostEqual(axis_angle[2], 0)
             self.assertAlmostEqual(axis_angle[3], expected_angle_axis[j][1], 3)
 
+    def test_pitch_angles(self):
+        mags = [
+            [-6978, 5034, -2936],  # DOOR WALL
+            [-7456, 1348, -1137],  # MIRROR
+            [-7231, 6709, 732],    # RIGHT WALL
+            [-7525, 3502, 2523]    # WINDOW
+        ]
+        expected_angle_axis = [
+            (104.3, -1.0),
+            (131.6, -1.0),
+            (24.4, 1.0),
+            (121.3, 1.0)
+            ]
+
+        for j, mag in enumerate(mags):
+            mag = [(mag[i] - self.MAG_BIAS[i])/self.MAG_SCALE[i] for i in range(3)]
+            attitude = self._compute_attitude_x(mag)
+            axis_angle = sensorfusion.quaternion_to_axis_angle(*attitude)
+            print j, axis_angle
+            self.assertAlmostEqual(axis_angle[0], expected_angle_axis[j][0], 1)
+            self.assertAlmostEqual(axis_angle[1], expected_angle_axis[j][1], 3)
+            self.assertAlmostEqual(axis_angle[2], 0)
+            self.assertAlmostEqual(axis_angle[3], 0)
+
+    def _test_roll_angles(self):
+        mags = [
+            [-4385, -1112, -1782],
+            [-452, -1381, -793],
+            [-5137, -870, 2033],
+            [-1663, -974, 3062],
+        ]
+        expected_angle_axis = [
+            (104.3, -1.0),
+            (131.6, -1.0),
+            (24.4, 1.0),
+            (121.3, 1.0)
+            ]
+
+        for j, mag in enumerate(mags):
+            mag = [(mag[i] - self.MAG_BIAS[i])/self.MAG_SCALE[i] for i in range(3)]
+            attitude = self._compute_attitude_y(mag)
+            axis_angle = sensorfusion.quaternion_to_axis_angle(*attitude)
+            self.assertAlmostEqual(axis_angle[0], expected_angle_axis[j][0], 1)
+            self.assertAlmostEqual(axis_angle[1], 0)
+            self.assertAlmostEqual(axis_angle[2], expected_angle_axis[j][1], 3)
+            self.assertAlmostEqual(axis_angle[3], 0)
+
     def test_yaw_0_360(self):
         # 0/360: x 0, y +
         mag = [0.0, 40.0, 40.0]
@@ -97,20 +144,6 @@ class TestOrientation(unittest.TestCase):
         self.assertAlmostEqual(attitude[3], 1.0, 3)
         axis_angle = sensorfusion.quaternion_to_axis_angle(*attitude)
         self.assertEqual(axis_angle, (0, 0, 0, 0))
-
-    def test_roll_90(self):
-        # 90: x 0 z -
-        mag = [0.0, 90.0, -40.0]
-        attitude = self._compute_attitude_y(mag)
-        self.assertAlmostEqual(attitude[0], 0.707, 3)
-        self.assertAlmostEqual(attitude[1], 0.0, 3)
-        self.assertAlmostEqual(attitude[2], 0.0, 3)
-        self.assertAlmostEqual(attitude[3], 0.707, 3)
-        axis_angle = sensorfusion.quaternion_to_axis_angle(*attitude)
-        self.assertAlmostEqual(axis_angle[0], 90, 3)
-        self.assertAlmostEqual(axis_angle[1], 1)
-        self.assertAlmostEqual(axis_angle[2], 0)
-        self.assertAlmostEqual(axis_angle[3], 0)
 
     def test_yaw_90(self):
         # 90: x -, y 0
