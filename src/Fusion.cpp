@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 
 #include <utils/Log.h>
 
@@ -191,6 +192,8 @@ void Fusion::initFusion(const vec4_t& q, float dT)
     x0 = q;
     x1 = 0;
 
+    // std::cout << "initFusion " << x0[0] << " " << x0[1] << " " << x0[2] << std::endl;
+
     // process noise covariance matrix: G.Q.Gt, with
     //
     //  G = | -1 0 |        Q = | q00 q10 |
@@ -259,9 +262,18 @@ bool Fusion::checkInitComplete(int what, const vec3_t& d, float dT) {
         // a rough estimate of our initial state
         mat33_t R;
         vec3_t up(mData[0]);
+
+	// std::cout << "checkInitComplete-up " << up[0] << " " << up[1] << " " << up[2] << std::endl;
         vec3_t east(cross_product(mData[1], up));
-        east *= 1/length(east);
+	// std::cout << "checkInitComplete-east " << east[0] << " " << east[1] << " " << east[2] << std::endl;
+
+	float length_east(length(east));
+	if (length_east != 0) {
+	  east *= 1/length(east);
+	}
         vec3_t north(cross_product(up, east));
+	// std::cout << "checkInitComplete-north " << north[0] << " " << north[1] << " " << north[2] << std::endl;
+
         R << east << north << up;
         const vec4_t q = matrixToQuat(R);
 
@@ -291,6 +303,11 @@ status_t Fusion::handleAcc(const vec3_t& a) {
     }
 
     const float l = 1/length(a);
+
+    // std::cout << "::updateAcc1 " << a[0] << " " << a[1] << " " << a[2] << std::endl;
+    // std::cout << "::updateAcc2 " << Ba[0] << " " << Ba[1] << " " << Ba[2] << std::endl;
+    // std::cout << "::updateAcc3 " << accSTDEV*l << std::endl;
+
     update(a*l, Ba, accSTDEV*l);
     return NO_ERROR;
 }
@@ -312,6 +329,15 @@ status_t Fusion::handleMag(const vec3_t& m) {
         return BAD_VALUE;
     }
 
+    // std::cout << "::updateMag-matrix" << std::endl;
+    for (int i = 0; i < 3; i++) {
+      // std::cout << "\t" << getRotationMatrix()[i][0];
+      // std::cout << " " << getRotationMatrix()[i][1];
+      // std::cout << " " << getRotationMatrix()[i][2] << std::endl;
+    }
+    // std::cout << "::updateMag-Ba " << Ba[0] << " " << Ba[1] << " " << Ba[2] << std::endl;
+    // std::cout << "::updateMag-m " << m[0] << " " << m[1] << " " << m[2] << std::endl;
+
     // Orthogonalize the magnetic field to the gravity field, mapping it into
     // tangent to Earth.
     const vec3_t up( getRotationMatrix() * Ba );
@@ -325,12 +351,19 @@ status_t Fusion::handleMag(const vec3_t& m) {
         return BAD_VALUE;
     }
 
+    // std::cout << "::updateMag-up " << up[0] << " " << up[1] << " " << up[2] << std::endl;
+    // std::cout << "::updateMag-east " << east[0] << " " << east[1] << " " << east[2] << std::endl;
+
     // If we have created an orthogonal magnetic field successfully,
     // then pass it in as the update.
     vec3_t north( cross_product(up, east) );
 
     const float l = 1 / length(north);
     north *= l;
+
+    // std::cout << "::updateMag1 " << north[0] << " " << north[1] << " " << north[2] << std::endl;
+    // std::cout << "::updateMag2 " << Bm[0] << " " << Bm[1] << " " << Bm[2] << std::endl;
+    // std::cout << "::updateMag3 " << magSTDEV*l << std::endl;
 
     update(north, Bm, magSTDEV*l);
     return NO_ERROR;
@@ -375,9 +408,12 @@ mat34_t Fusion::getF(const vec4_t& q) {
 }
 
 void Fusion::predict(const vec3_t& w, float dT) {
-    const vec4_t q  = x0;
-    const vec3_t b  = x1;
-    const vec3_t we = w - b;
+  // std::cout << "predict-w " << w[0] << " " << w[1] << " " << w[2] << " " << dT << std::endl;
+  const vec4_t q  = x0;
+  // std::cout << "predict-q " << x0[0] << " " << x0[1] << " " << x0[2] << std::endl;
+  const vec3_t b  = x1;
+  // std::cout << "predict-b " << x1[0] << " " << x1[1] << " " << x1[2] << std::endl;
+  const vec3_t we = w - b;
 
     // q(k+1) = O(we)*q(k)
     // --------------------
@@ -412,7 +448,9 @@ void Fusion::predict(const vec3_t& w, float dT) {
     const float lwedT = length(we)*dT;
     const float hlwedT = 0.5f*lwedT;
     const float ilwe = 1/length(we);
+    // std::cout << "predict-ilwe " << ilwe << std::endl;
     const float k0 = (1-cosf(lwedT))*(ilwe*ilwe);
+    // std::cout << "k0 " << k0 << std::endl;
     const float k1 = sinf(lwedT);
     const float k2 = cosf(hlwedT);
     const vec3_t psi(sinf(hlwedT)*ilwe*we);
@@ -426,9 +464,18 @@ void Fusion::predict(const vec3_t& w, float dT) {
     Phi[0][0] = I33 - wx*(k1*ilwe) + wx2*k0;
     Phi[1][0] = wx*k0 - I33dT - wx2*(ilwe*ilwe*ilwe)*(lwedT-k1);
 
+    // std::cout << "predict-prex0 " << x0[0] << " " << x0[1] << " " << x0[2] << std::endl;
+    // std::cout << "predict-O ";
+    for (int i = 0; i < 3; i++) {
+      // std::cout << "\t" << O[i][0];
+      // std::cout << " " << O[i][1];
+      // std::cout << " " << O[i][2] << std::endl;
+    }
+    // std::cout << "predict-q " << q[0] << " " << q[1] << " " << q[2] << std::endl;
     x0 = O*q;
     if (x0.w < 0)
         x0 = -x0;
+    // std::cout << "predict-x0 " << x0[0] << " " << x0[1] << " " << x0[2] << std::endl;
 
     P = Phi*P*transpose(Phi) + GQGt;
 
@@ -437,6 +484,7 @@ void Fusion::predict(const vec3_t& w, float dT) {
 
 void Fusion::update(const vec3_t& z, const vec3_t& Bi, float sigma) {
     vec4_t q(x0);
+    // std::cout << "update-x0 " << x0[0] << " " << x0[1] << " " << x0[2] << std::endl;
     // measured vector in body space: h(p) = A(p)*Bi
     const mat33_t A(quatToMatrix(q));
     const vec3_t Bb(A*Bi);
@@ -473,7 +521,11 @@ void Fusion::update(const vec3_t& z, const vec3_t& Bi, float sigma) {
     const vec3_t dq(K[0]*e);
     const vec3_t db(K[1]*e);
 
+    // std::cout << "update-preq " << q[0] << " " << q[1] << " " << q[2] << std::endl;
+    // std::cout << "update-dq " << dq[0] << " " << dq[1] << " " << dq[2] << std::endl;
     q += getF(q)*(0.5f*dq);
+    // std::cout << "update-q " << q[0] << " " << q[1] << " " << q[2] << std::endl;
+
     x0 = normalize_quat(q);
     x1 += db;
 

@@ -24,6 +24,8 @@
 
 #include "traits.h"
 
+#include <iostream>
+
 // -----------------------------------------------------------------------
 
 #define PURE __attribute__((pure))
@@ -234,9 +236,12 @@ VLHS<TYPE, 3> PURE cross_product(
         const VLHS<TYPE, 3>& u,
         const VRHS<TYPE, 3>& v) {
     VLHS<TYPE, 3> r;
+    // std::cout << "cross_product-u " << u[0] << " " << u[1] << " " << u[2] << std::endl;
+    // std::cout << "cross_product-v " << v[0] << " " << v[1] << " " << v[2] << std::endl;
     r.x = u.y*v.z - u.z*v.y;
     r.y = u.z*v.x - u.x*v.z;
     r.z = u.x*v.y - u.y*v.x;
+    // std::cout << "cross_product " << r[0] << " " << r[1] << " " << r[2] << std::endl;
     return r;
 }
 
