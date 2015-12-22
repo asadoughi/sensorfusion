@@ -2,6 +2,7 @@
 #include <Python.h>
 
 #include "MadgwickAHRS.h"
+#include "MadgwickQuaternion.h"
 #include "Fusion.h"
 
 using namespace boost::python;
@@ -71,15 +72,22 @@ struct MadgwickAHRS {
   void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
     MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
   }
-  void updateIMU(float gx, float gy, float gz, float ax, float ay, float az) {
-    MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
-  }
   float getBeta() { return beta; }
   void setBeta(float new_beta) { beta = new_beta; }
   float getq0() { return q0; }
   float getq1() { return q1; }
   float getq2() { return q2; }
   float getq3() { return q3; }
+};
+
+struct MadgwickQuaternion {
+  void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float deltaT) {
+    MadgwickQuaternionUpdate(gx, gy, gz, ax, ay, az, mx, my, mz, deltaT);
+  }
+  float q0() { return q[0]; }
+  float q1() { return q[1]; }
+  float q2() { return q[2]; }
+  float q3() { return q[3]; }
 };
 
 BOOST_PYTHON_MODULE(glue)
@@ -104,11 +112,18 @@ BOOST_PYTHON_MODULE(glue)
 
   class_<MadgwickAHRS>("MadgwickAHRS")
     .def("update", &MadgwickAHRS::update)
-    .def("updateIMU", &MadgwickAHRS::updateIMU)
     .add_property("beta", &MadgwickAHRS::getBeta, &MadgwickAHRS::setBeta)
     .add_property("q0", &MadgwickAHRS::getq0)
     .add_property("q1", &MadgwickAHRS::getq1)
     .add_property("q2", &MadgwickAHRS::getq2)
     .add_property("q3", &MadgwickAHRS::getq3)
+    ;
+
+  class_<MadgwickQuaternion>("MadgwickQuaternion")
+    .def("update", &MadgwickQuaternion::update)
+    .add_property("q0", &MadgwickQuaternion::q0)
+    .add_property("q1", &MadgwickQuaternion::q1)
+    .add_property("q2", &MadgwickQuaternion::q2)
+    .add_property("q3", &MadgwickQuaternion::q3)
     ;
 }

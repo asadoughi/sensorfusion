@@ -6,6 +6,7 @@ source_files = [
     "src/Fusion.cpp",
     "src/pyglue.cpp",
     "src/MadgwickAHRS.c",
+    "src/MadgwickQuaternion.c",
 ]
 
 glue_module = Extension(
