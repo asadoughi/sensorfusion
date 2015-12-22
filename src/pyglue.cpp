@@ -1,6 +1,7 @@
 #include <boost/python.hpp>
 #include <Python.h>
 
+#include "MadgwickAHRS.h"
 #include "Fusion.h"
 
 using namespace boost::python;
@@ -66,13 +67,27 @@ struct pylist_converter {
   }
 };
 
+struct MadgwickAHRS {
+  void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
+    MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
+  }
+  void updateIMU(float gx, float gy, float gz, float ax, float ay, float az) {
+    MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
+  }
+  float getBeta() { return beta; }
+  void setBeta(float new_beta) { beta = new_beta; }
+  float getq0() { return q0; }
+  float getq1() { return q1; }
+  float getq2() { return q2; }
+  float getq3() { return q3; }
+};
 
 BOOST_PYTHON_MODULE(glue)
 {
   to_python_converter<vec<float, 4ul>, vec4_to_list>();
   to_python_converter<vec<float, 3ul>, vec3_to_list>();
   to_python_converter<mat<float, 3ul, 3ul>, mat33_to_list>();
-  
+
   pylist_converter()
     .from_python<vec<float, 3ul> >()
     ;
@@ -85,5 +100,15 @@ BOOST_PYTHON_MODULE(glue)
     .def("handleAcc", &Fusion::handleAcc)
     .def("handleMag", &Fusion::handleMag)
     .def("handleGyro", &Fusion::handleGyro)
+    ;
+
+  class_<MadgwickAHRS>("MadgwickAHRS")
+    .def("update", &MadgwickAHRS::update)
+    .def("updateIMU", &MadgwickAHRS::updateIMU)
+    .add_property("beta", &MadgwickAHRS::getBeta, &MadgwickAHRS::setBeta)
+    .add_property("q0", &MadgwickAHRS::getq0)
+    .add_property("q1", &MadgwickAHRS::getq1)
+    .add_property("q2", &MadgwickAHRS::getq2)
+    .add_property("q3", &MadgwickAHRS::getq3)
     ;
 }
