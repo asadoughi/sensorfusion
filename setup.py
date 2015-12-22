@@ -2,6 +2,18 @@
 
 from setuptools import setup, Extension, find_packages
 
+source_files = [
+    "src/Fusion.cpp",
+    "src/pyglue.cpp",
+    "src/MadgwickAHRS.c",
+]
+
+glue_module = Extension(
+    "glue",
+    source_files,
+    libraries=["boost_python"],
+    include_dirs=["include"])
+
 setup(
     name="sensorfusion",
     version="0.0.4",
@@ -11,8 +23,5 @@ setup(
     url="https://github.com/asadoughi/sensorfusion",
     packages=find_packages(),
     ext_package="sensorfusion",
-    ext_modules=[Extension("glue",
-                           ["src/Fusion.cpp", "src/pyglue.cpp"],
-                           libraries=["boost_python"],
-                           include_dirs=["include"])]
+    ext_modules=[glue_module]
 )
