@@ -80,16 +80,6 @@ struct MadgwickAHRS {
   float getq3() { return q3; }
 };
 
-struct MadgwickQuaternion {
-  void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float deltaT) {
-    MadgwickQuaternionUpdate(gx, gy, gz, ax, ay, az, mx, my, mz, deltaT);
-  }
-  float q0() { return q[0]; }
-  float q1() { return q[1]; }
-  float q2() { return q[2]; }
-  float q3() { return q[3]; }
-};
-
 BOOST_PYTHON_MODULE(glue)
 {
   to_python_converter<vec<float, 4ul>, vec4_to_list>();

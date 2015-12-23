@@ -20,9 +20,7 @@
 #define Kp 2.0f * 5.0f // these are the free parameters in the Mahony filter and fusion scheme, Kp for proportional feedback, Ki for integral
 #define Ki 0.0f
 
-volatile float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};
-
-void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, float deltat)
+void MadgwickQuaternion::update(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, float deltat)
 {
   float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];   // short name local variable for readability
   float norm;
